@@ -6,7 +6,7 @@ let currentFileRes = "Unknown";
 let currentFileMime = "image/jpeg";
 
 // Insert your Gemini API Key here!
-const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
+const GEMINI_API_KEY = "AIzaSyBGTfEb9RlLLmOlAgDzApR0jYnuymTI7PU";
 
 // DOM
 const views = document.querySelectorAll('.view');
@@ -33,7 +33,7 @@ fileInput.addEventListener('change', async (e) => {
 
     currentFileMime = file.type || "image/jpeg";
     currentFileSizeMb = (file.size / (1024 * 1024)).toFixed(2);
-    
+
     // Auto-detect resolution via image load
     const imgObj = new Image();
     const objectUrl = URL.createObjectURL(file);
@@ -48,11 +48,11 @@ fileInput.addEventListener('change', async (e) => {
     reader.onload = async (event) => {
         currentFileBase64 = event.target.result;
         previewImg.src = currentFileBase64;
-        
+
         // Switch to scanner
         showView('analyzer-view');
         statusText.innerText = "UPLOADING PIXELS...";
-        
+
         // Wait UX
         setTimeout(startAnalysis, 1000);
     };
@@ -70,7 +70,7 @@ async function startAnalysis() {
             {
                 "parts": [
                     { "text": "Analyze the attached image. Respond ONLY in valid JSON format using the exact following structure: {\"smart_name\": \"...\", \"description\": \"...\", \"tags\": [\"...\", \"...\"], \"lighting_quality\": \"8/10\", \"sharpness\": \"9/10\"}. Do NOT include any markdown formatting like ```json, just output the raw JSON object." },
-                    { 
+                    {
                         "inline_data": {
                             "mime_type": currentFileMime,
                             "data": rawBase64
@@ -92,7 +92,7 @@ async function startAnalysis() {
             throw new Error("Missing API Key");
         }
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
             signal: controller.signal,
             headers: {
@@ -103,7 +103,7 @@ async function startAnalysis() {
         clearTimeout(timeoutId);
 
         const raw = await response.json();
-        
+
         let resultJson;
         if (raw.error) {
             throw new Error(raw.error.message);
@@ -115,7 +115,7 @@ async function startAnalysis() {
         }
 
         populateReport(resultJson);
-        
+
         // Save to faux history
         history.push({
             img: currentFileBase64,
@@ -123,7 +123,7 @@ async function startAnalysis() {
         });
 
         showView('report-view');
-        
+
     } catch (e) {
         clearTimeout(timeoutId);
         console.warn("Gemini Error / Missing Key:", e);
@@ -147,7 +147,7 @@ function populateReport(data) {
     document.getElementById('report-img').src = currentFileBase64;
     document.getElementById('report-title').innerText = data.smart_name.replace(/_/g, ' ');
     document.getElementById('report-desc').innerText = data.description;
-    
+
     const tagsDiv = document.getElementById('report-tags');
     tagsDiv.innerHTML = '';
     data.tags.forEach(tag => {
@@ -162,14 +162,14 @@ function populateReport(data) {
 
     document.getElementById('meta-res').innerText = currentFileRes;
     document.getElementById('meta-size').innerText = `${currentFileSizeMb} MB`;
-    
+
     // Reset file input
     fileInput.value = '';
 }
 
 function renderHistory() {
     if (history.length === 0) return;
-    
+
     historyGrid.innerHTML = '';
     [...history].reverse().forEach(item => {
         const div = document.createElement('div');
@@ -182,11 +182,11 @@ function renderHistory() {
             </div>
         `;
         div.onclick = () => {
-             currentFileBase64 = item.img;
-             currentFileRes = "Saved";
-             currentFileSizeMb = "?";
-             populateReport(item.data);
-             showView('report-view');
+            currentFileBase64 = item.img;
+            currentFileRes = "Saved";
+            currentFileSizeMb = "?";
+            populateReport(item.data);
+            showView('report-view');
         };
         historyGrid.appendChild(div);
     });

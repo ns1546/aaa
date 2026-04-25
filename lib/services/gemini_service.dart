@@ -4,10 +4,10 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 class GeminiService {
-  // Replace this with your actual Gemini API Key from aistudio.google.com
-  final String _apiKey = 'YOUR_GEMINI_API_KEY_HERE';
+  // Insert your actual Gemini API Key here
+  final String _apiKey = 'AIzaSyBGTfEb9RlLLmOlAgDzApR0jYnuymTI7PU';
   // Using the incredible free and fast Flash model
-  final String _model = 'gemini-1.5-flash';
+  final String _model = 'gemini-2.5-flash';
 
   Future<Map<String, dynamic>?> analyzeImage(Uint8List imageBytes, String mimeType) async {
     final String base64Image = base64Encode(imageBytes);
