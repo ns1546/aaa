@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Optic AI - Web Test</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="library-view" class="view active">
+        <h1 class="logo gradient-text">Optic.AI</h1>
+        <p class="subtitle">Cloud Web Tester</p>
+        
+        <div id="history-grid" class="grid">
+            <div class="empty-state">Initialize a new scan above to begin testing the AI.</div>
+        </div>
+
+        <div class="fab-container">
+            <label for="file-input" class="fab">
+                Scan Image
+            </label>
+            <input type="file" id="file-input" accept="image/*" capture="environment">
+        </div>
+    </div>
+
+    <div id="analyzer-view" class="view">
+        <h2 id="status-text" class="gradient-text tracking-wide">UPLOADING PIXELS...</h2>
+        <div class="scanner-container">
+            <img id="preview-img" src="" alt="Preview">
+            <div class="scanner-line"></div>
+        </div>
+    </div>
+
+    <div id="report-view" class="view">
+        <div class="hero-header">
+            <button id="back-btn" class="glass-btn">← Back to Library</button>
+            <img id="report-img" src="" alt="Analyzed photo">
+        </div>
+        <div class="report-content">
+            <div class="glass-card">
+                <h2 id="report-title" class="gradient-text title-large">...</h2>
+                <p id="report-desc" class="desc">...</p>
+                
+                <div id="report-tags" class="tags-container"></div>
+                
+                <div class="section-title">SYNTHETIC METRICS</div>
+                <div class="metrics">
+                    <div class="metric"><strong id="metric-light">...</strong><span>Lighting</span></div>
+                    <div class="metric"><strong id="metric-sharp">...</strong><span>Sharpness</span></div>
+                </div>
+
+                <div class="section-title">FILE METADATA</div>
+                <ul class="meta-list">
+                    <li><span class="label">Dimensions</span> <strong id="meta-res">...</strong></li>
+                    <li><span class="label">File Size</span> <strong id="meta-size">...</strong></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
