@@ -1,0 +1,29 @@
+name: Build Flutter APK
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Updated to v4
+      - uses: actions/checkout@v4
+      
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0' # You can change this to match your project's version
+          channel: 'stable'
+      
+      - run: flutter pub get
+      - run: flutter build apk --release
+      
+      - name: Upload APK
+        # Updated to v4
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
