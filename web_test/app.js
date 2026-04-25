@@ -3,6 +3,10 @@ let history = [];
 let currentFileBase64 = null;
 let currentFileSizeMb = 0;
 let currentFileRes = "Unknown";
+let currentFileMime = "image/jpeg";
+
+// Insert your Gemini API Key here!
+const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";
 
 // DOM
 const views = document.querySelectorAll('.view');
@@ -27,6 +31,7 @@ fileInput.addEventListener('change', async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    currentFileMime = file.type || "image/jpeg";
     currentFileSizeMb = (file.size / (1024 * 1024)).toFixed(2);
     
     // Auto-detect resolution via image load
@@ -57,54 +62,53 @@ fileInput.addEventListener('change', async (e) => {
 async function startAnalysis() {
     statusText.innerText = "NEURAL INFERENCE ACTIVE...";
 
-    // Use test API key to hit groq directly
-    const apiKey = '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';
-    const model = 'llama-3.2-11b-vision-preview'; // Testing standard 11b or generic vision
-    
-    // Wait, you mentioned Groq decommissioned their vision model!
-    // Since we are mocking the web test for the user, let's use a free text fallback OR ask the API.
-    // If the API fails with "model_decommissioned", we will simulate the AI success locally for the web test demo
-    // just so they can feel the UI flow on their phone!
+    // Extract the raw base64 string without the data URI prefix for Gemini
+    const rawBase64 = currentFileBase64.split(',')[1];
 
     const payload = {
-        model: model,
-        messages: [
+        "contents": [
             {
-                role: "user",
-                content: [
-                    { type: "text", text: "Analyze the attached image. Respond ONLY in valid JSON format using the following structure: {'smart_name': '...', 'description': '...', 'tags': ['...', '...'], 'lighting_quality': '8/10', 'sharpness': '9/10'}. Do NOT include any markdown formatting like ```json, just the raw JSON object." },
-                    { type: "image_url", image_url: { url: currentFileBase64 } }
+                "parts": [
+                    { "text": "Analyze the attached image. Respond ONLY in valid JSON format using the exact following structure: {\"smart_name\": \"...\", \"description\": \"...\", \"tags\": [\"...\", \"...\"], \"lighting_quality\": \"8/10\", \"sharpness\": \"9/10\"}. Do NOT include any markdown formatting like ```json, just output the raw JSON object." },
+                    { 
+                        "inline_data": {
+                            "mime_type": currentFileMime,
+                            "data": rawBase64
+                        }
+                    }
                 ]
             }
         ],
-        temperature: 0.1
+        "generationConfig": {
+            "temperature": 0.2
+        }
     };
 
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
+
     try {
-        const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        if (GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+            throw new Error("Missing API Key");
+        }
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`, {
             method: 'POST',
+            signal: controller.signal,
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         });
+        clearTimeout(timeoutId);
 
         const raw = await response.json();
         
-        // Handle Groq Error naturally for test mode
         let resultJson;
         if (raw.error) {
-            console.warn("Groq API errored (likely vision disabled). Using Fallback MOCK for UI Test.");
-            resultJson = {
-                smart_name: "Test_Image_MOCK.jpg",
-                description: "Groq returned an error: " + raw.error.message + ". This is a MOCK response to let you test the UI on your phone.",
-                tags: ["Mock", "Test", "Fallback"],
-                lighting_quality: "9/10",
-                sharpness: "7/10"
-            };
+            throw new Error(raw.error.message);
         } else {
-            let contentStr = raw.choices[0].message.content.trim();
+            let contentStr = raw.candidates[0].content.parts[0].text.trim();
             if (contentStr.startsWith('```json')) contentStr = contentStr.substring(7, contentStr.length - 3);
             if (contentStr.startsWith('```')) contentStr = contentStr.substring(3, contentStr.length - 3);
             resultJson = JSON.parse(contentStr);
@@ -121,8 +125,21 @@ async function startAnalysis() {
         showView('report-view');
         
     } catch (e) {
-        alert("Network Error: " + e.message);
-        showView('library-view');
+        clearTimeout(timeoutId);
+        console.warn("Gemini Error / Missing Key:", e);
+        const fallbackJson = {
+            smart_name: "Web_Test_Missing_Key.jpg",
+            description: "The API failed. Did you replace YOUR_GEMINI_API_KEY_HERE in app.js with your real Gemini API key? Or a network error occurred.",
+            tags: ["Error", "Invalid Key", "Offline"],
+            lighting_quality: "0/10",
+            sharpness: "0/10"
+        };
+        populateReport(fallbackJson);
+        history.push({
+            img: currentFileBase64,
+            data: fallbackJson
+        });
+        showView('report-view');
     }
 }
 

@@ -4,10 +4,10 @@ import 'package:exif/exif.dart';
 import 'package:image_size_getter/image_size_getter.dart';
 import 'package:image_size_getter/file_input.dart';
 import '../models/analyzed_image.dart';
-import 'groq_service.dart';
+import 'gemini_service.dart';
 
 class ImageProcessorService {
-  final GroqService _aiService = GroqService();
+  final GeminiService _aiService = GeminiService();
 
   Future<AnalyzedImage?> processImage(File file) async {
     try {
